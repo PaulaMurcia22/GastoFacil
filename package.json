@@ -1,0 +1,21 @@
+{
+  "name": "gasto-facil",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20 <21",
+    "npm": ">=10"
+  },
+  "workspaces": [
+    "frontend-expo",
+    "backend-api"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "dev:front": "npm run start --workspace frontend-expo",
+    "dev:back": "npm run start:dev --workspace backend-api",
+    "lint:front": "npm run lint --workspace frontend-expo",
+    "lint:back": "npm run lint --workspace backend-api",
+    "desktop:help": "node -e \"console.log('Usa scripts/start-backend.ps1 y scripts/start-frontend-web.ps1 con Node 20 activo.')\""
+  }
+}

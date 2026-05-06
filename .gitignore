@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.expo/
+.next/
+coverage/
+*.log
+.env
+.env.local
+frontend-expo/.expo/
+frontend-expo/.env
+backend-api/.env
