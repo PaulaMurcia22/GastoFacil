@@ -5,6 +5,7 @@ interface JwtPayload {
   email: string;
   nickname: string;
   status: number;
+  id_rol?: number;
   iat: number;
   exp: number;
 }

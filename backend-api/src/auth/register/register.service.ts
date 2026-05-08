@@ -39,6 +39,7 @@ export class RegisterService {
           email: user.email,
           age: user.age,
           status: user.status,
+          id_rol: user.id_rol,
           audit: user.audit,
         },
       };

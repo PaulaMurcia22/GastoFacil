@@ -27,6 +27,7 @@ export class UsersRepository {
           NULL,
           NULL,
           NULL,
+          NULL,
           NULL
         )
       `,
@@ -45,7 +46,7 @@ export class UsersRepository {
   async create(params: CreateUserParams): Promise<UserRecord> {
     await this.pool.query(
       `
-        CALL sp_create_user($1, $2, $3, $4, $5)
+        CALL sp_create_user($1, $2, $3, $4, $5, $6)
       `,
       [
         params.fullName,
@@ -53,6 +54,7 @@ export class UsersRepository {
         params.email,
         params.age,
         params.passwordHash,
+        1,
       ],
     );
 
@@ -65,6 +67,7 @@ export class UsersRepository {
           email,
           age,
           status,
+          id_rol,
           password_hash,
           audit
         FROM users

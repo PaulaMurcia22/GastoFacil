@@ -5,6 +5,7 @@ export interface UserRecord {
   email: string;
   age: number;
   status: number;
+  id_rol: number;
   password_hash: string;
   audit: Record<string, unknown>;
 }

@@ -5,6 +5,8 @@ export interface HomeUser {
   email: string;
   age: number;
   status: number;
+  id_rol?: number;
+  idRol?: number;
 }
 
 export interface HomeData {
