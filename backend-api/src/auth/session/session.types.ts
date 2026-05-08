@@ -5,6 +5,7 @@ export interface SessionUser {
   email: string;
   age: number;
   status: number;
+  idRol: number;
 }
 
 export interface SessionResponse {

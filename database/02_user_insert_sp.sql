@@ -7,7 +7,8 @@ CREATE OR REPLACE PROCEDURE sp_create_user(
     IN p_nickname varchar(80),
     IN p_email varchar(160),
     IN p_age integer,
-    IN p_password_hash text
+    IN p_password_hash text,
+    IN p_id_rol smallint
 )
 LANGUAGE plpgsql
 AS $$
@@ -18,6 +19,7 @@ BEGIN
         email,
         age,
         password_hash,
+        id_rol,
         status,
         audit
     )
@@ -27,6 +29,7 @@ BEGIN
         LOWER(TRIM(p_email)),
         p_age,
         p_password_hash,
+        p_id_rol,
         1,
         jsonb_build_object(
             'creacion',

@@ -17,6 +17,7 @@ export class SessionService {
         email: user.email,
         nickname: user.nickname,
         status: user.status,
+        id_rol: user.id_rol,
         iat: issuedAt,
         exp: expiresAt,
       },
@@ -34,6 +35,7 @@ export class SessionService {
         email: user.email,
         age: user.age,
         status: user.status,
+        idRol: user.id_rol,
       },
     };
   }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { HomeScreen } from "./screens/home/HomeScreen";
+import { AdminScreen } from "./screens/home/AdminScreen";
 import { type HomeData } from "./screens/home/home.types";
 import { LoginScreen } from "./screens/login/LoginScreen";
 import { RegisterScreen } from "./screens/register/RegisterScreen";
@@ -14,11 +15,15 @@ export function AuthFlow() {
   const [prefilledEmail, setPrefilledEmail] = useState("");
 
   if (session) {
+    const role = session.user.id_rol ?? session.user.idRol ?? 1;
+    if (role === 2) {
+      return (
+        <AdminScreen session={session} onCloseSession={() => setSession(null)} />
+      );
+    }
+
     return (
-      <HomeScreen
-        onCloseSession={() => setSession(null)}
-        session={session}
-      />
+      <HomeScreen onCloseSession={() => setSession(null)} session={session} />
     );
   }
 

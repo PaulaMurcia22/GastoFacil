@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     email varchar(160) NOT NULL,
     age integer NOT NULL,
     password_hash text NOT NULL,
+    id_rol smallint NOT NULL DEFAULT 1
+        CHECK (id_rol IN (1, 2)),
     status smallint NOT NULL DEFAULT 1
         CHECK (status IN (0, 1)),
     audit jsonb NOT NULL

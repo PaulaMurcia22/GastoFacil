@@ -10,7 +10,8 @@ CREATE OR REPLACE PROCEDURE sp_get_user_by_email(
     OUT email varchar,
     OUT password_hash text,
     OUT status smallint,
-    OUT audit jsonb
+    OUT audit jsonb,
+    OUT id_rol smallint
 )
 LANGUAGE plpgsql
 AS $$
@@ -22,7 +23,8 @@ BEGIN
         u.email,
         u.password_hash,
         u.status,
-        u.audit
+        u.audit,
+        COALESCE(u.id_rol, 1)
     INTO
         id,
         full_name,
@@ -31,6 +33,7 @@ BEGIN
         password_hash,
         status,
         audit
+        ,id_rol
     FROM users u
     WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(p_email))
     LIMIT 1;
