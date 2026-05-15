@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
-import { HomeScreen } from "./screens/home/HomeScreen";
+import { BrandHeader } from "../../components/BrandHeader";
+import { UserApp } from "../app/UserApp";
 import { AdminScreen } from "./screens/home/AdminScreen";
 import { type HomeData } from "./screens/home/home.types";
 import { LoginScreen } from "./screens/login/LoginScreen";
 import { RegisterScreen } from "./screens/register/RegisterScreen";
+import { colors } from "../../theme/colors";
 
 type AuthView = "login" | "register";
 
@@ -22,38 +31,75 @@ export function AuthFlow() {
       );
     }
 
-    return (
-      <HomeScreen onCloseSession={() => setSession(null)} session={session} />
-    );
+    return <UserApp onCloseSession={() => setSession(null)} session={session} />;
   }
 
   if (activeView === "register") {
     return (
-      <RegisterScreen
-        onGoToLogin={() => {
-          setActiveView("login");
-        }}
-        onRegisterSuccess={(email, message) => {
-          setPrefilledEmail(email);
-          setRegisterNotice(message);
-          setActiveView("login");
-        }}
-      />
+      <GuestLayout>
+        <RegisterScreen
+          onGoToLogin={() => {
+            setActiveView("login");
+          }}
+          onRegisterSuccess={(email, message) => {
+            setPrefilledEmail(email);
+            setRegisterNotice(message);
+            setActiveView("login");
+          }}
+        />
+      </GuestLayout>
     );
   }
 
   return (
-    <LoginScreen
-      initialEmail={prefilledEmail}
-      onGoToRegister={() => {
-        setRegisterNotice(null);
-        setActiveView("register");
-      }}
-      onLoginSuccess={(nextSession) => {
-        setSession(nextSession);
-        setRegisterNotice(null);
-      }}
-      registerNotice={registerNotice}
-    />
+    <GuestLayout>
+      <LoginScreen
+        initialEmail={prefilledEmail}
+        onGoToRegister={() => {
+          setRegisterNotice(null);
+          setActiveView("register");
+        }}
+        onLoginSuccess={(nextSession) => {
+          setSession(nextSession);
+          setRegisterNotice(null);
+        }}
+        registerNotice={registerNotice}
+      />
+    </GuestLayout>
   );
 }
+
+function GuestLayout({ children }: { children: ReactNode }) {
+  return (
+    <View style={styles.guestShell}>
+      <BrandHeader />
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.flex}
+      >
+        <ScrollView
+          bounces={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  guestShell: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  flex: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: colors.background,
+  },
+});

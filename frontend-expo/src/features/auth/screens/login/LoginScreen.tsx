@@ -77,7 +77,7 @@ export function LoginScreen({
     <View style={authStyles.formCard}>
       <Text style={authStyles.formTitle}>Iniciar sesion</Text>
       <Text style={authStyles.formSubtitle}>
-        Ingresa con tu correo y contrasena para continuar.
+        Ingresa con tu correo y contraseñaa para continuar.
       </Text>
 
       {registerNotice ? (
