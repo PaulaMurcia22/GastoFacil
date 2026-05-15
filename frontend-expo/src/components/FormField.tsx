@@ -22,6 +22,8 @@ interface FormFieldProps<TFieldValues extends FieldValues> {
   showToggle?: boolean;
   isVisible?: boolean;
   onToggleVisibility?: () => void;
+  multiline?: boolean;
+  numberOfLines?: number;
 }
 
 export function FormField<TFieldValues extends FieldValues>({
@@ -36,6 +38,8 @@ export function FormField<TFieldValues extends FieldValues>({
   showToggle = false,
   isVisible = false,
   onToggleVisibility,
+  multiline = false,
+  numberOfLines = 1,
 }: FormFieldProps<TFieldValues>) {
   return (
     <Controller
@@ -50,12 +54,18 @@ export function FormField<TFieldValues extends FieldValues>({
               autoCapitalize={autoCapitalize}
               inputMode={inputMode}
               keyboardType={keyboardType}
+              multiline={multiline}
+              numberOfLines={numberOfLines}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder={placeholder}
               placeholderTextColor={colors.textMuted}
               secureTextEntry={secureTextEntry && !isVisible}
-              style={styles.input}
+              style={[
+                styles.input,
+                multiline ? styles.multilineInput : null,
+              ]}
+              textAlignVertical={multiline ? "top" : "center"}
               value={String(value ?? "")}
             />
 
@@ -101,6 +111,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     color: colors.text,
     fontSize: 15,
+  },
+  multilineInput: {
+    minHeight: 108,
   },
   toggleButton: {
     paddingHorizontal: 14,

@@ -1,0 +1,333 @@
+import { StyleSheet } from "react-native";
+
+import { colors } from "../../theme/colors";
+
+export const appStyles = StyleSheet.create({
+  shell: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  headerSubtitle: {
+    color: colors.textMuted,
+    fontSize: 13,
+    marginTop: 4,
+  },
+  brandBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+  },
+  brandBadgeText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 13,
+    letterSpacing: 0.4,
+  },
+  pageContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 24,
+  },
+  pageTitle: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  pageSubtitle: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
+  },
+  sectionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 18,
+    marginTop: 16,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  sectionLabel: {
+    color: colors.textMuted,
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  summaryPrimaryCard: {
+    backgroundColor: colors.primary,
+    borderRadius: 22,
+    padding: 18,
+    marginTop: 16,
+  },
+  summaryPrimaryLabel: {
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 13,
+  },
+  summaryPrimaryValue: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "800",
+    marginTop: 8,
+  },
+  row: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  buttonPrimary: {
+    minHeight: 52,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
+  buttonPrimaryPressed: {
+    backgroundColor: colors.primarySoft,
+  },
+  buttonPrimaryText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  buttonSecondary: {
+    minHeight: 52,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
+  buttonSecondaryPressed: {
+    backgroundColor: "#EFF3F7",
+  },
+  buttonSecondaryText: {
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  buttonGhost: {
+    minHeight: 48,
+    borderRadius: 14,
+    backgroundColor: colors.input,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  buttonGhostPressed: {
+    backgroundColor: "#E2E8F0",
+  },
+  buttonGhostText: {
+    color: colors.text,
+    fontWeight: "700",
+  },
+  helperText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 8,
+  },
+  emptyStateCard: {
+    marginTop: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 24,
+    alignItems: "center",
+  },
+  emptyStateTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  emptyStateText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+    marginTop: 8,
+  },
+  listCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    marginTop: 12,
+  },
+  listCardPressed: {
+    backgroundColor: "#F0F4F8",
+  },
+  amountText: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  mutedText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  tagRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  tagPrimary: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: colors.accentSoft,
+  },
+  tagPrimaryText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  tagNeutral: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: colors.input,
+  },
+  tagNeutralText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  detailGrid: {
+    gap: 12,
+    marginTop: 18,
+  },
+  detailItem: {
+    borderRadius: 16,
+    backgroundColor: colors.input,
+    padding: 14,
+  },
+  detailItemLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  detailItemValue: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  centeredState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28,
+  },
+  navBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    paddingBottom: 12,
+    backgroundColor: colors.primary,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  navItemActive: {
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  navIconCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  navIconCircleActive: {
+    backgroundColor: colors.accent,
+  },
+  navIconText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  navIconTextActive: {
+    color: colors.primary,
+  },
+  navLabel: {
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 10,
+    fontWeight: "700",
+    marginTop: 4,
+  },
+  navLabelActive: {
+    color: "#FFFFFF",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(34, 50, 68, 0.42)",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 22,
+    padding: 20,
+    maxHeight: "70%",
+  },
+  modalTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 12,
+  },
+  modalOption: {
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    backgroundColor: colors.input,
+    marginTop: 8,
+  },
+  modalOptionSelected: {
+    backgroundColor: "#E7EDF4",
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  modalOptionText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+});
