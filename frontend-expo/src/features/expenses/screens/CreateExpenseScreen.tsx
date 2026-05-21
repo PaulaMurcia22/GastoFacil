@@ -14,6 +14,7 @@ import {
 import { FormField } from "../../../components/FormField";
 import { appStyles } from "../../app/app.styles";
 import { SelectField } from "../../app/components/SelectField";
+import { DateField } from "../../app/components/DateField";
 import {
   createExpense,
   fetchExpenseCategories,
@@ -49,6 +50,7 @@ export function CreateExpenseScreen({
 }: CreateExpenseScreenProps) {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [amountServerError, setAmountServerError] = useState<string | null>(null);
   const isEditing = Boolean(initialExpense);
   const {
     control,
@@ -69,6 +71,14 @@ export function CreateExpenseScreen({
   });
 
   const expenseType = useWatch({ control, name: "expenseType" });
+  const amountValue = useWatch({ control, name: "amount" });
+
+  useEffect(() => {
+    if (amountServerError) {
+      setAmountServerError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amountValue]);
 
   useEffect(() => {
     if (initialExpense) {
@@ -139,6 +149,7 @@ export function CreateExpenseScreen({
   const onSubmit = handleSubmit(async (values) => {
     try {
       const payload = toExpensePayload(values);
+      setAmountServerError(null);
 
       if (initialExpense) {
         await updateExpense(initialExpense.id, payload);
@@ -160,6 +171,11 @@ export function CreateExpenseScreen({
         error instanceof Error
           ? error.message
           : "No fue posible registrar el gasto.";
+
+      if (message.toLowerCase().includes("supera tu dinero disponible")) {
+        setAmountServerError(message);
+        return;
+      }
 
       Alert.alert("Registro no completado", message);
     }
@@ -189,13 +205,15 @@ export function CreateExpenseScreen({
           name="amount"
           placeholder="Ej: 500000"
         />
+        {amountServerError ? (
+          <Text style={styles.fieldErrorText}>{amountServerError}</Text>
+        ) : null}
 
-        <FormField
-          autoCapitalize="none"
+        <DateField
           control={control}
           label="Fecha"
           name="expenseDate"
-          placeholder="YYYY-MM-DD"
+          placeholder="Selecciona una fecha"
         />
 
         {isLoadingCategories ? (
@@ -294,5 +312,11 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
+  },
+  fieldErrorText: {
+    color: "#C94A4A",
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 10,
   },
 });

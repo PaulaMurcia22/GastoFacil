@@ -14,6 +14,7 @@ import {
 import { FormField } from "../../../components/FormField";
 import { appStyles } from "../../app/app.styles";
 import { SelectField } from "../../app/components/SelectField";
+import { DateField } from "../../app/components/DateField";
 import { createIncome, fetchIncomeCategories, updateIncome } from "../income.api";
 import {
   incomeSchema,
@@ -179,12 +180,11 @@ export function CreateIncomeScreen({
           placeholder="Ej: 2500000"
         />
 
-        <FormField
-          autoCapitalize="none"
+        <DateField
           control={control}
           label="Fecha"
           name="incomeDate"
-          placeholder="YYYY-MM-DD"
+          placeholder="Selecciona una fecha"
         />
 
         {isLoadingCategories ? (

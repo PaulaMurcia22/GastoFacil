@@ -143,31 +143,16 @@ export function ExpenseListScreen({
           </Text>
         </View>
 
-        <View style={styles.headerActions}>
-          <Pressable
-            onPress={() => {
-              setActiveCategoryId("all");
-            }}
-            style={({ pressed }) => [
-              appStyles.buttonSecondary,
-              styles.filterButton,
-              pressed ? appStyles.buttonSecondaryPressed : null,
-            ]}
-          >
-            <Text style={appStyles.buttonSecondaryText}>Filtrar</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={onCreateExpense}
-            style={({ pressed }) => [
-              appStyles.buttonPrimary,
-              styles.createButton,
-              pressed ? appStyles.buttonPrimaryPressed : null,
-            ]}
-          >
-            <Text style={appStyles.buttonPrimaryText}>Nuevo</Text>
-          </Pressable>
-        </View>
+        <Pressable
+          onPress={onCreateExpense}
+          style={({ pressed }) => [
+            appStyles.buttonPrimary,
+            styles.createButton,
+            pressed ? appStyles.buttonPrimaryPressed : null,
+          ]}
+        >
+          <Text style={appStyles.buttonPrimaryText}>Nuevo</Text>
+        </Pressable>
       </View>
 
       <ScrollView
@@ -281,7 +266,8 @@ export function ExpenseListScreen({
 
             <View style={styles.actionsRow}>
               <Pressable
-                onPress={() => {
+                onPress={(event) => {
+                  event.stopPropagation();
                   onEditExpense(expense);
                 }}
                 style={({ pressed }) => [
@@ -294,7 +280,8 @@ export function ExpenseListScreen({
               </Pressable>
 
               <Pressable
-                onPress={() => {
+                onPress={(event) => {
+                  event.stopPropagation();
                   handleDelete(expense);
                 }}
                 style={({ pressed }) => [
@@ -321,14 +308,7 @@ const styles = StyleSheet.create({
   headerCopy: {
     flex: 1,
   },
-  headerActions: {
-    alignItems: "flex-end",
-    gap: 8,
-  },
   createButton: {
-    minWidth: 92,
-  },
-  filterButton: {
     minWidth: 92,
   },
   centerText: {

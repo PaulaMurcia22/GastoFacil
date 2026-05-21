@@ -69,6 +69,17 @@ export class ExpensesService {
       );
     }
 
+    const availableMoney = await this.calculateAvailableMoneyForMonth(
+      userId,
+      dto.expenseDate,
+    );
+
+    if (dto.amount > availableMoney) {
+      throw new BadRequestException(
+        "No es posible registrar ese gasto porque supera tu dinero disponible. Ingresa un valor mas bajo o reduce otros gastos.",
+      );
+    }
+
     const createdExpenseId = await this.expensesRepository.create({
       userId,
       categoryId: category.id,
@@ -107,6 +118,18 @@ export class ExpensesService {
     if (dto.expenseType !== "variable" && dto.frequencyMonths != null) {
       throw new BadRequestException(
         "La frecuencia solo aplica para gastos variables.",
+      );
+    }
+
+    const availableMoney = await this.calculateAvailableMoneyForMonth(
+      userId,
+      dto.expenseDate,
+      id,
+    );
+
+    if (dto.amount > availableMoney) {
+      throw new BadRequestException(
+        "No es posible registrar ese gasto porque supera tu dinero disponible. Ingresa un valor mas bajo o reduce otros gastos.",
       );
     }
 
@@ -157,5 +180,52 @@ export class ExpensesService {
         name: expense.categoryName,
       },
     };
+  }
+
+  private async calculateAvailableMoneyForMonth(
+    userId: string,
+    referenceDate: string,
+    expenseIdToExclude?: string,
+  ): Promise<number> {
+    const { fromDate, toDate } = this.buildMonthRange(referenceDate);
+    const snapshot = await this.expensesRepository.getMonthlyFinancialSnapshot(
+      userId,
+      fromDate,
+      toDate,
+      expenseIdToExclude,
+    );
+
+    return snapshot.incomeTotal - snapshot.expenseTotal - snapshot.goalContributionTotal;
+  }
+
+  private buildMonthRange(referenceDate: string): { fromDate: string; toDate: string } {
+    const date = new Date(`${referenceDate}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+      const today = new Date();
+      const fallbackMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+      return this.buildMonthRangeFromDate(fallbackMonth);
+    }
+
+    return this.buildMonthRangeFromDate(date);
+  }
+
+  private buildMonthRangeFromDate(date: Date): { fromDate: string; toDate: string } {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+    return {
+      fromDate: this.formatDate(start),
+      toDate: this.formatDate(end),
+    };
+  }
+
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
   }
 }

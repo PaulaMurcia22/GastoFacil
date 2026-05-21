@@ -1,5 +1,8 @@
 export type UserAppScreen =
   | "home"
+  | "goal-list"
+  | "goal-create"
+  | "goal-detail"
   | "income-list"
   | "income-create"
   | "income-detail"

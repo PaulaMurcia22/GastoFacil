@@ -32,6 +32,12 @@ interface UpdateExpenseParams extends CreateExpenseParams {
   id: string;
 }
 
+interface FinancialSnapshotRow {
+  incomeTotal: string;
+  expenseTotal: string;
+  goalContributionTotal: string;
+}
+
 @Injectable()
 export class ExpensesRepository {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
@@ -201,5 +207,52 @@ export class ExpensesRepository {
     );
 
     return result.rows[0]?.id ?? null;
+  }
+
+  async getMonthlyFinancialSnapshot(
+    userId: string,
+    fromDate: string,
+    toDate: string,
+    expenseIdToExclude?: string,
+  ): Promise<{
+    incomeTotal: number;
+    expenseTotal: number;
+    goalContributionTotal: number;
+  }> {
+    const result = await this.pool.query<FinancialSnapshotRow>(
+      `
+        SELECT
+          COALESCE((
+            SELECT SUM(i.amount)
+            FROM incomes i
+            WHERE i.user_id = $1
+              AND i.status = 1
+              AND i.income_date BETWEEN $2::date AND $3::date
+          ), 0)::text AS "incomeTotal",
+          COALESCE((
+            SELECT SUM(e.amount)
+            FROM expenses e
+            WHERE e.user_id = $1
+              AND e.status = 1
+              AND e.expense_date BETWEEN $2::date AND $3::date
+              AND ($4::uuid IS NULL OR e.id <> $4::uuid)
+          ), 0)::text AS "expenseTotal",
+          COALESCE((
+            SELECT SUM(d.amount)
+            FROM goal_deposits d
+            WHERE d.user_id = $1
+              AND d.contribution_date BETWEEN $2::date AND $3::date
+          ), 0)::text AS "goalContributionTotal"
+      `,
+      [userId, fromDate, toDate, expenseIdToExclude ?? null],
+    );
+
+    const row = result.rows[0];
+
+    return {
+      incomeTotal: Number(row?.incomeTotal ?? "0"),
+      expenseTotal: Number(row?.expenseTotal ?? "0"),
+      goalContributionTotal: Number(row?.goalContributionTotal ?? "0"),
+    };
   }
 }
