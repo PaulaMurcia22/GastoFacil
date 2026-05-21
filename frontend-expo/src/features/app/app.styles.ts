@@ -37,6 +37,9 @@ export const appStyles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: colors.primary,
   },
+  brandBadgePressed: {
+    opacity: 0.85,
+  },
   brandBadgeText: {
     color: "#FFFFFF",
     fontWeight: "800",
@@ -329,5 +332,35 @@ export const appStyles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
     fontWeight: "600",
+  },
+  headerMenuOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(34, 50, 68, 0.2)",
+    paddingTop: 64,
+    paddingRight: 20,
+    alignItems: "flex-end",
+  },
+  headerMenuCard: {
+    minWidth: 170,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 8,
+  },
+  headerMenuItem: {
+    minHeight: 42,
+    borderRadius: 10,
+    backgroundColor: colors.input,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  headerMenuItemPressed: {
+    backgroundColor: "#E2E8F0",
+  },
+  headerMenuItemText: {
+    color: colors.text,
+    fontWeight: "700",
   },
 });

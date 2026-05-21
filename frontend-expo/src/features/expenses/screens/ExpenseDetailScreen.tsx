@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   Alert,
@@ -11,19 +12,22 @@ import {
 
 import { appStyles } from "../../app/app.styles";
 import { formatCurrency, formatDate } from "../../app/formatters";
-import { fetchExpenseDetail } from "../expense.api";
+import { deleteExpense, fetchExpenseDetail } from "../expense.api";
 import { ExpenseItem } from "../expense.types";
+import { colors } from "../../../theme/colors";
 
 interface ExpenseDetailScreenProps {
   expenseId: string;
   onBackToList: () => void;
-  onCreateAnother: () => void;
+  onEditExpense: (expense: ExpenseItem) => void;
+  onExpenseDeleted: () => void;
 }
 
 export function ExpenseDetailScreen({
   expenseId,
   onBackToList,
-  onCreateAnother,
+  onEditExpense,
+  onExpenseDeleted,
 }: ExpenseDetailScreenProps) {
   const [expense, setExpense] = useState<ExpenseItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,6 +66,38 @@ export function ExpenseDetailScreen({
     };
   }, [expenseId]);
 
+  const handleDelete = (expense: ExpenseItem) => {
+    Alert.alert(
+      "Eliminar gasto",
+      "Deseas eliminar este gasto? Esta accion no se puede deshacer.",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () => {
+            void (async () => {
+              try {
+                await deleteExpense(expense.id);
+                onExpenseDeleted();
+              } catch (error) {
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : "No fue posible eliminar el gasto.";
+
+                Alert.alert("Eliminacion no completada", message);
+              }
+            })();
+          },
+        },
+      ],
+    );
+  };
+
   if (isLoading) {
     return (
       <View style={appStyles.centeredState}>
@@ -99,7 +135,46 @@ export function ExpenseDetailScreen({
       contentContainerStyle={appStyles.pageContent}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={appStyles.pageTitle}>Detalle del gasto</Text>
+      <View style={styles.topMenu}>
+        <Pressable
+          onPress={onBackToList}
+          style={({ pressed }) => [
+            styles.topIconButton,
+            pressed ? styles.topIconButtonPressed : null,
+          ]}
+        >
+          <Ionicons color="#FFFFFF" name="arrow-back" size={18} />
+        </Pressable>
+
+        <Text style={styles.topMenuTitle}>Detalle del gasto</Text>
+
+        <View style={styles.topActions}>
+          <Pressable
+            onPress={() => {
+              onEditExpense(expense);
+            }}
+            style={({ pressed }) => [
+              styles.topIconButton,
+              pressed ? styles.topIconButtonPressed : null,
+            ]}
+          >
+            <Ionicons color="#FFFFFF" name="pencil" size={16} />
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              handleDelete(expense);
+            }}
+            style={({ pressed }) => [
+              styles.topIconButton,
+              pressed ? styles.topIconButtonPressed : null,
+            ]}
+          >
+            <Ionicons color="#FFFFFF" name="trash-outline" size={16} />
+          </Pressable>
+        </View>
+      </View>
+
       <Text style={appStyles.pageSubtitle}>
         Revisa la informacion completa del registro seleccionado.
       </Text>
@@ -155,46 +230,48 @@ export function ExpenseDetailScreen({
             </Text>
           </View>
         </View>
-
-        <View style={[appStyles.row, styles.actionsRow]}>
-          <Pressable
-            onPress={onBackToList}
-            style={({ pressed }) => [
-              appStyles.buttonSecondary,
-              styles.flexButton,
-              pressed ? appStyles.buttonSecondaryPressed : null,
-            ]}
-          >
-            <Text style={appStyles.buttonSecondaryText}>Volver</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={onCreateAnother}
-            style={({ pressed }) => [
-              appStyles.buttonPrimary,
-              styles.flexButton,
-              pressed ? appStyles.buttonPrimaryPressed : null,
-            ]}
-          >
-            <Text style={appStyles.buttonPrimaryText}>Registrar otro</Text>
-          </Pressable>
-        </View>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  topMenu: {
+    minHeight: 54,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+  topMenuTitle: {
+    color: "#FFFFFF",
+    fontSize: 19,
+    fontWeight: "800",
+    flex: 1,
+    marginLeft: 12,
+  },
+  topActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  topIconButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topIconButtonPressed: {
+    opacity: 0.8,
+  },
   centerText: {
     textAlign: "center",
   },
   missingAction: {
     marginTop: 16,
-  },
-  actionsRow: {
-    marginTop: 10,
-  },
-  flexButton: {
-    flex: 1,
   },
 });

@@ -15,6 +15,10 @@ import { ExpenseDetailScreen } from "../expenses/screens/ExpenseDetailScreen";
 import { ExpenseListScreen } from "../expenses/screens/ExpenseListScreen";
 import { type IncomeItem } from "../incomes/income.types";
 import { type ExpenseItem } from "../expenses/expense.types";
+import { GoalListScreen } from "../goals/screens/GoalListScreen";
+import { CreateGoalScreen } from "../goals/screens/CreateGoalScreen";
+import { GoalDetailScreen } from "../goals/screens/GoalDetailScreen";
+import { GoalItem } from "../goals/goal.types";
 
 interface UserAppProps {
   session: HomeData;
@@ -24,6 +28,10 @@ interface UserAppProps {
 function resolveActiveNav(screen: UserAppScreen): BottomNavScreen {
   if (screen === "home") {
     return "home";
+  }
+
+  if (screen === "goal-list" || screen === "goal-create" || screen === "goal-detail") {
+    return "goal-list";
   }
 
   if (screen === "expense-list" || screen === "expense-create" || screen === "expense-detail") {
@@ -39,6 +47,8 @@ export function UserApp({ session, onCloseSession }: UserAppProps) {
   const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(null);
   const [incomeToEdit, setIncomeToEdit] = useState<IncomeItem | null>(null);
   const [expenseToEdit, setExpenseToEdit] = useState<ExpenseItem | null>(null);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [goalToEdit, setGoalToEdit] = useState<GoalItem | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleDataChanged = () => {
@@ -61,29 +71,77 @@ export function UserApp({ session, onCloseSession }: UserAppProps) {
       return;
     }
 
+    if (screen === "goal-list") {
+      setActiveScreen("goal-list");
+      return;
+    }
+
     Alert.alert(
       "Seccion en preparacion",
-      "El menu inferior ya esta visible, pero por ahora dejamos activos los flujos completos de ingresos y gastos.",
+      "El menu inferior ya esta visible, pero por ahora dejamos activos los flujos de metas, ingresos y gastos.",
     );
   };
 
   return (
     <View style={appStyles.shell}>
-      <AppHeader userName={session.user.nickname} />
+      <AppHeader userName={session.user.nickname} onCloseSession={onCloseSession} />
 
       <View style={appStyles.content}>
         {activeScreen === "home" ? (
           <HomeDashboardScreen
-            onCloseSession={onCloseSession}
-            onGoToIncomeList={() => {
-              setIncomeToEdit(null);
-              setActiveScreen("income-list");
+            refreshKey={refreshKey}
+          />
+        ) : null}
+
+        {activeScreen === "goal-list" ? (
+          <GoalListScreen
+            onCreateGoal={() => {
+              setGoalToEdit(null);
+              setActiveScreen("goal-create");
             }}
-            onGoToExpenseList={() => {
-              setExpenseToEdit(null);
-              setActiveScreen("expense-list");
+            onDataChanged={handleDataChanged}
+            onOpenGoal={(goalId) => {
+              setSelectedGoalId(goalId);
+              setActiveScreen("goal-detail");
+            }}
+            onEditGoal={(goal) => {
+              setGoalToEdit(goal);
+              setActiveScreen("goal-create");
             }}
             refreshKey={refreshKey}
+          />
+        ) : null}
+
+        {activeScreen === "goal-create" ? (
+          <CreateGoalScreen
+            onCancel={() => {
+              setGoalToEdit(null);
+              setActiveScreen("goal-list");
+            }}
+            onGoalSaved={() => {
+              handleDataChanged();
+              setGoalToEdit(null);
+              setActiveScreen("goal-list");
+            }}
+            initialGoal={goalToEdit}
+          />
+        ) : null}
+
+        {activeScreen === "goal-detail" && selectedGoalId ? (
+          <GoalDetailScreen
+            goalId={selectedGoalId}
+            onBackToList={() => {
+              setActiveScreen("goal-list");
+            }}
+            onEditGoal={(goal) => {
+              setGoalToEdit(goal);
+              setActiveScreen("goal-create");
+            }}
+            onGoalDeleted={() => {
+              handleDataChanged();
+              setActiveScreen("goal-list");
+            }}
+            onDataChanged={handleDataChanged}
           />
         ) : null}
 
@@ -127,8 +185,13 @@ export function UserApp({ session, onCloseSession }: UserAppProps) {
             onBackToList={() => {
               setActiveScreen("income-list");
             }}
-            onCreateAnother={() => {
+            onEditIncome={(income) => {
+              setIncomeToEdit(income);
               setActiveScreen("income-create");
+            }}
+            onIncomeDeleted={() => {
+              handleDataChanged();
+              setActiveScreen("income-list");
             }}
           />
         ) : null}
@@ -173,8 +236,13 @@ export function UserApp({ session, onCloseSession }: UserAppProps) {
             onBackToList={() => {
               setActiveScreen("expense-list");
             }}
-            onCreateAnother={() => {
+            onEditExpense={(expense) => {
+              setExpenseToEdit(expense);
               setActiveScreen("expense-create");
+            }}
+            onExpenseDeleted={() => {
+              handleDataChanged();
+              setActiveScreen("expense-list");
             }}
           />
         ) : null}
