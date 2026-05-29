@@ -14,9 +14,10 @@ const navItems: Array<{
   shortLabel: string;
 }> = [
   { id: "home", label: "Home", shortLabel: "H" },
-  { id: "goal-list", label: "Metas", shortLabel: "M" },
   { id: "income-list", label: "Ingresos", shortLabel: "I" },
   { id: "expense-list", label: "Gastos", shortLabel: "G" },
+  { id: "goal-list", label: "Metas", shortLabel: "M" },
+  { id: "profile", label: "Perfil", shortLabel: "P" },
 ];
 
 export function BottomNav({ active, onNavigate }: BottomNavProps) {
