@@ -14,5 +14,4 @@ export type BottomNavScreen =
   | "home"
   | "goal-list"
   | "income-list"
-  | "expense-list"
-  | "money-view";
+  | "expense-list";

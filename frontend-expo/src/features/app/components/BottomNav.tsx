@@ -17,7 +17,6 @@ const navItems: Array<{
   { id: "goal-list", label: "Metas", shortLabel: "M" },
   { id: "income-list", label: "Ingresos", shortLabel: "I" },
   { id: "expense-list", label: "Gastos", shortLabel: "G" },
-  { id: "money-view", label: "Dinero", shortLabel: "D" },
 ];
 
 export function BottomNav({ active, onNavigate }: BottomNavProps) {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, View } from "react-native";
+import { View } from "react-native";
 
 import { type HomeData } from "../auth/screens/home/home.types";
 import { AppHeader } from "./components/AppHeader";
@@ -76,10 +76,6 @@ export function UserApp({ session, onCloseSession }: UserAppProps) {
       return;
     }
 
-    Alert.alert(
-      "Seccion en preparacion",
-      "El menu inferior ya esta visible, pero por ahora dejamos activos los flujos de metas, ingresos y gastos.",
-    );
   };
 
   return (
