@@ -37,6 +37,8 @@ Se utilizó UML para modelar los casos de uso, las entidades principales y secue
 - Diagrama de clases (entidades principales y relaciones).
 - Diagramas de secuencia (flujos: login, crear gasto, cálculo de capacidad de ahorro).
 
+Adicional, se encontrara el diagrama relacional de la base de datos.
+
 
 ## Actores encontrados
 Actores principales identificados:
