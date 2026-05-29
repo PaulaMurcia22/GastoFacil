@@ -99,9 +99,13 @@ export function RegisterScreen({
 
   return (
     <View style={authStyles.formCard}>
-      <Text style={authStyles.formTitle}>Registrarse</Text>
+      <Text style={authStyles.formTitle}>
+        {isAdminMode ? "Crear usuario" : "Registrarse"}
+      </Text>
       <Text style={authStyles.formSubtitle}>
-        Crea tu cuenta para empezar el control de gastos del MVP.
+        {isAdminMode
+          ? "Crea una cuenta y define el rol con el que ingresara al sistema."
+          : "Crea tu cuenta para empezar el control de gastos del MVP."}
       </Text>
 
       <FormField
@@ -191,7 +195,9 @@ export function RegisterScreen({
         {isSubmitting ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
-          <Text style={authStyles.submitButtonText}>Crear cuenta</Text>
+          <Text style={authStyles.submitButtonText}>
+            {isAdminMode ? "Crear usuario" : "Crear cuenta"}
+          </Text>
         )}
       </Pressable>
 

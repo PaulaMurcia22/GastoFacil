@@ -8,6 +8,9 @@ export interface AdminDashboardStatsRow {
   activeUserPercentage: string;
   goalAdoptionPercentage: string;
   savingsParticipationPercentage: string;
+  historicalUsersTotal: string;
+  monthlyGoalContributionUserPercentage: string;
+  monthlyIncomeExpenseUserPercentage: string;
 }
 
 export interface AdminDashboardUserRow {
@@ -31,10 +34,20 @@ export class AdminRepository {
   async getDashboardStats(): Promise<AdminDashboardStatsRow> {
     const result = await this.pool.query<AdminDashboardStatsRow>(
       `
-        WITH regular_users AS (
+        WITH month_range AS (
+          SELECT
+            date_trunc('month', CURRENT_DATE)::date AS from_date,
+            (date_trunc('month', CURRENT_DATE) + INTERVAL '1 month - 1 day')::date AS to_date
+        ),
+        regular_users AS (
           SELECT id, status
           FROM users
           WHERE id_rol = 1
+        ),
+        active_regular_users AS (
+          SELECT id
+          FROM regular_users
+          WHERE status = 1
         ),
         goal_totals AS (
           SELECT
@@ -43,6 +56,8 @@ export class AdminRepository {
             g.target_amount,
             COALESCE(SUM(d.amount), 0) AS saved_amount
           FROM goals g
+          INNER JOIN active_regular_users u
+            ON u.id = g.user_id
           LEFT JOIN goal_deposits d
             ON d.goal_id = g.id
            AND d.user_id = g.user_id
@@ -58,7 +73,33 @@ export class AdminRepository {
           FROM regular_users u
           LEFT JOIN goal_totals gt
             ON gt.user_id = u.id
-          GROUP BY u.id
+          GROUP BY u.id, u.status
+        ),
+        monthly_goal_users AS (
+          SELECT DISTINCT d.user_id
+          FROM goal_deposits d
+          INNER JOIN active_regular_users u
+            ON u.id = d.user_id
+          CROSS JOIN month_range mr
+          WHERE d.contribution_date BETWEEN mr.from_date AND mr.to_date
+        ),
+        monthly_income_users AS (
+          SELECT DISTINCT i.user_id
+          FROM incomes i
+          INNER JOIN active_regular_users u
+            ON u.id = i.user_id
+          CROSS JOIN month_range mr
+          WHERE i.status = 1
+            AND i.income_date BETWEEN mr.from_date AND mr.to_date
+        ),
+        monthly_expense_users AS (
+          SELECT DISTINCT e.user_id
+          FROM expenses e
+          INNER JOIN active_regular_users u
+            ON u.id = e.user_id
+          CROSS JOIN month_range mr
+          WHERE e.status = 1
+            AND e.expense_date BETWEEN mr.from_date AND mr.to_date
         )
         SELECT
           COALESCE((
@@ -97,7 +138,39 @@ export class AdminRepository {
                 ELSE ROUND(COUNT(*) FILTER (WHERE savings_total > 0)::numeric / COUNT(*)::numeric * 100)
               END
             FROM user_activity
-          ), 0)::text AS "savingsParticipationPercentage"
+          ), 0)::text AS "savingsParticipationPercentage",
+          COALESCE((SELECT COUNT(*) FROM regular_users), 0)::text AS "historicalUsersTotal",
+          COALESCE((
+            SELECT
+              CASE
+                WHEN COUNT(*) FILTER (WHERE status = 1) = 0 THEN 0
+                ELSE ROUND(
+                  COUNT(*) FILTER (
+                    WHERE status = 1
+                      AND id IN (SELECT user_id FROM monthly_goal_users)
+                  )::numeric
+                  / (COUNT(*) FILTER (WHERE status = 1))::numeric
+                  * 100
+                )
+              END
+            FROM user_activity
+          ), 0)::text AS "monthlyGoalContributionUserPercentage",
+          COALESCE((
+            SELECT
+              CASE
+                WHEN COUNT(*) FILTER (WHERE status = 1) = 0 THEN 0
+                ELSE ROUND(
+                  COUNT(*) FILTER (
+                    WHERE status = 1
+                      AND id IN (SELECT user_id FROM monthly_income_users)
+                      AND id IN (SELECT user_id FROM monthly_expense_users)
+                  )::numeric
+                  / (COUNT(*) FILTER (WHERE status = 1))::numeric
+                  * 100
+                )
+              END
+            FROM user_activity
+          ), 0)::text AS "monthlyIncomeExpenseUserPercentage"
       `,
     );
 
@@ -106,10 +179,13 @@ export class AdminRepository {
       activeUserPercentage: "0",
       goalAdoptionPercentage: "0",
       savingsParticipationPercentage: "0",
+      historicalUsersTotal: "0",
+      monthlyGoalContributionUserPercentage: "0",
+      monthlyIncomeExpenseUserPercentage: "0",
     };
   }
 
-  async listUsers(): Promise<AdminDashboardUserRow[]> {
+  async listUsers(currentAdminId: string): Promise<AdminDashboardUserRow[]> {
     const result = await this.pool.query<AdminDashboardUserRow>(
       `
         WITH goal_totals AS (
@@ -155,9 +231,11 @@ export class AdminRepository {
           ON r.id = u.id_rol
         LEFT JOIN goal_totals gt
           ON gt.user_id = u.id
+        WHERE u.id <> $1
         GROUP BY u.id, r.name
         ORDER BY u.status DESC, u.id_rol ASC, u.full_name ASC
       `,
+      [currentAdminId],
     );
 
     return result.rows;

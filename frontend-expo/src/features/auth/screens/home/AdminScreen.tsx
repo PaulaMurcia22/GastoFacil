@@ -32,12 +32,24 @@ interface AdminScreenProps {
 }
 
 type AdminTab = "home" | "users" | "create-user" | "profile";
+type AdminNavIconVariant = "home" | "users" | "profile";
+type MetricIconVariant =
+  | "target"
+  | "growth"
+  | "activity"
+  | "adoption"
+  | "history"
+  | "deposit"
+  | "flow";
 
 const emptyStats: AdminDashboardStats = {
   goalCompletionPercentage: 0,
   activeUserPercentage: 0,
   goalAdoptionPercentage: 0,
   savingsParticipationPercentage: 0,
+  historicalUsersTotal: 0,
+  monthlyGoalContributionUserPercentage: 0,
+  monthlyIncomeExpenseUserPercentage: 0,
 };
 
 export function AdminScreen({ session, onCloseSession }: AdminScreenProps) {
@@ -47,6 +59,7 @@ export function AdminScreen({ session, onCloseSession }: AdminScreenProps) {
   const [searchValue, setSearchValue] = useState("");
   const [stats, setStats] = useState<AdminDashboardStats>(emptyStats);
   const [users, setUsers] = useState<AdminDashboardUser[]>([]);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async (isMounted = true) => {
     try {
@@ -84,19 +97,20 @@ export function AdminScreen({ session, onCloseSession }: AdminScreenProps) {
   }, [loadDashboard]);
 
   const filteredUsers = useMemo(() => {
+    const availableUsers = users.filter((user) => user.id !== session.user.id);
     const normalizedSearch = searchValue.trim().toLowerCase();
 
     if (!normalizedSearch) {
-      return users;
+      return availableUsers;
     }
 
-    return users.filter((user) => {
+    return availableUsers.filter((user) => {
       const searchableText = `${user.fullName} ${user.nickname} ${user.email}`
         .toLowerCase();
 
       return searchableText.includes(normalizedSearch);
     });
-  }, [searchValue, users]);
+  }, [searchValue, session.user.id, users]);
 
   const handleCloseSession = async () => {
     try {
@@ -108,63 +122,42 @@ export function AdminScreen({ session, onCloseSession }: AdminScreenProps) {
     }
   };
 
-  const handleDeactivateUser = (user: AdminDashboardUser) => {
-    Alert.alert(
-      "Desactivar usuario",
-      `Deseas desactivar la cuenta de ${user.fullName}?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Desactivar",
-          style: "destructive",
-          onPress: () => {
-            void (async () => {
-              try {
-                const response = await deactivateAdminUser(user.id);
-                setUsers(response.users);
-                await loadDashboard();
-              } catch (error) {
-                const message =
-                  error instanceof Error
-                    ? error.message
-                    : "No fue posible desactivar el usuario.";
+  const handleDeactivateUser = async (user: AdminDashboardUser) => {
+    try {
+      setUpdatingUserId(user.id);
+      const response = await deactivateAdminUser(user.id);
+      setUsers(response.users);
+      await loadDashboard();
+      Alert.alert("Usuario inactivado", response.message);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible desactivar el usuario.";
 
-                Alert.alert("Accion no completada", message);
-              }
-            })();
-          },
-        },
-      ],
-    );
+      Alert.alert("Accion no completada", message);
+    } finally {
+      setUpdatingUserId(null);
+    }
   };
 
-  const handlePromoteUser = (user: AdminDashboardUser) => {
-    Alert.alert(
-      "Convertir en administrador",
-      `Deseas convertir a ${user.fullName} en administrador?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Convertir",
-          onPress: () => {
-            void (async () => {
-              try {
-                const response = await promoteAdminUser(user.id);
-                setUsers(response.users);
-                await loadDashboard();
-              } catch (error) {
-                const message =
-                  error instanceof Error
-                    ? error.message
-                    : "No fue posible convertir el usuario en administrador.";
+  const handlePromoteUser = async (user: AdminDashboardUser) => {
+    try {
+      setUpdatingUserId(user.id);
+      const response = await promoteAdminUser(user.id);
+      setUsers(response.users);
+      await loadDashboard();
+      Alert.alert("Rol actualizado", response.message);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible convertir el usuario en administrador.";
 
-                Alert.alert("Accion no completada", message);
-              }
-            })();
-          },
-        },
-      ],
-    );
+      Alert.alert("Accion no completada", message);
+    } finally {
+      setUpdatingUserId(null);
+    }
   };
 
   return (
@@ -210,10 +203,15 @@ export function AdminScreen({ session, onCloseSession }: AdminScreenProps) {
                 isLoading={isLoading}
                 onCreateUser={() => setActiveTab("create-user")}
                 currentUserId={session.user.id}
-                onDeactivateUser={handleDeactivateUser}
-                onPromoteUser={handlePromoteUser}
+                onDeactivateUser={(user) => {
+                  void handleDeactivateUser(user);
+                }}
+                onPromoteUser={(user) => {
+                  void handlePromoteUser(user);
+                }}
                 searchValue={searchValue}
                 setSearchValue={setSearchValue}
+                updatingUserId={updatingUserId}
               />
             ) : null}
           </>
@@ -232,33 +230,60 @@ function StatsSection({
   isLoading: boolean;
   stats: AdminDashboardStats;
 }) {
-  const statCards = [
+  const statCards: Array<{
+    id: string;
+    icon: MetricIconVariant;
+    label: string;
+    value: string;
+    tone: string;
+  }> = [
     {
       id: "completion",
-      icon: "◎",
+      icon: "target",
       label: "Cumplimiento metas",
       value: `${stats.goalCompletionPercentage.toFixed(0)}%`,
       tone: colors.accent,
     },
     {
       id: "savings",
-      icon: "◌",
+      icon: "growth",
       label: "Usuarios con ahorro",
       value: `${stats.savingsParticipationPercentage.toFixed(0)}%`,
       tone: colors.success,
     },
     {
       id: "users",
-      icon: "▦",
+      icon: "activity",
       label: "Usuarios activos",
       value: `${stats.activeUserPercentage.toFixed(0)}%`,
       tone: colors.primary,
     },
     {
       id: "active",
-      icon: "◇",
+      icon: "adoption",
       label: "Adopcion de metas",
       value: `${stats.goalAdoptionPercentage.toFixed(0)}%`,
+      tone: colors.success,
+    },
+    {
+      id: "historical",
+      icon: "history",
+      label: "Usuarios historicos",
+      value: String(stats.historicalUsersTotal),
+      tone: colors.primary,
+    },
+    {
+      id: "monthly-goals",
+      icon: "deposit",
+      label: "Abonaron este mes",
+      value: `${stats.monthlyGoalContributionUserPercentage.toFixed(0)}%`,
+      tone: colors.accent,
+    },
+    {
+      id: "monthly-flow",
+      icon: "flow",
+      label: "Ingresos y gastos mes",
+      value: `${stats.monthlyIncomeExpenseUserPercentage.toFixed(0)}%`,
       tone: colors.success,
     },
   ];
@@ -271,9 +296,7 @@ function StatsSection({
         {statCards.map((card) => (
           <View key={card.id} style={styles.statCard}>
             <View style={styles.statHeader}>
-              <Text style={[styles.statIcon, { color: card.tone }]}>
-                {card.icon}
-              </Text>
+              <MetricIcon color={card.tone} variant={card.icon} />
               <Text style={styles.statLabel}>{card.label}</Text>
             </View>
             {isLoading ? (
@@ -291,6 +314,85 @@ function StatsSection({
   );
 }
 
+function MetricIcon({
+  color,
+  variant,
+}: {
+  color: string;
+  variant: MetricIconVariant;
+}) {
+  if (variant === "target") {
+    return (
+      <View style={[styles.metricIconFrame, { borderColor: color }]}>
+        <View style={[styles.metricTargetRing, { borderColor: color }]}>
+          <View style={[styles.metricTargetDot, { backgroundColor: color }]} />
+        </View>
+      </View>
+    );
+  }
+
+  if (variant === "growth") {
+    return (
+      <View style={styles.metricIconFrame}>
+        <View style={styles.metricBars}>
+          <View style={[styles.metricBarSmall, { backgroundColor: color }]} />
+          <View style={[styles.metricBarMedium, { backgroundColor: color }]} />
+          <View style={[styles.metricBarTall, { backgroundColor: color }]} />
+        </View>
+      </View>
+    );
+  }
+
+  if (variant === "activity") {
+    return (
+      <View style={styles.metricIconFrame}>
+        <View style={[styles.metricPersonHead, { borderColor: color }]} />
+        <View style={[styles.metricPersonBody, { borderColor: color }]} />
+      </View>
+    );
+  }
+
+  if (variant === "adoption") {
+    return (
+      <View style={styles.metricIconFrame}>
+        <View style={[styles.metricDiamond, { borderColor: color }]}>
+          <View style={[styles.metricDiamondDot, { backgroundColor: color }]} />
+        </View>
+      </View>
+    );
+  }
+
+  if (variant === "history") {
+    return (
+      <View style={styles.metricIconFrame}>
+        <View style={[styles.metricClock, { borderColor: color }]}>
+          <View style={[styles.metricClockHandTall, { backgroundColor: color }]} />
+          <View style={[styles.metricClockHandWide, { backgroundColor: color }]} />
+        </View>
+      </View>
+    );
+  }
+
+  if (variant === "deposit") {
+    return (
+      <View style={styles.metricIconFrame}>
+        <View style={[styles.metricCoin, { borderColor: color }]}>
+          <View style={[styles.metricCoinLine, { backgroundColor: color }]} />
+        </View>
+        <View style={[styles.metricDepositBase, { backgroundColor: color }]} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.metricIconFrame}>
+      <View style={[styles.metricFlowTop, { borderColor: color }]} />
+      <View style={[styles.metricFlowBottom, { borderColor: color }]} />
+      <View style={[styles.metricFlowCenter, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
 function UsersSection({
   filteredUsers,
   currentUserId,
@@ -300,6 +402,7 @@ function UsersSection({
   onPromoteUser,
   searchValue,
   setSearchValue,
+  updatingUserId,
 }: {
   filteredUsers: AdminDashboardUser[];
   currentUserId: string;
@@ -309,6 +412,7 @@ function UsersSection({
   onPromoteUser: (user: AdminDashboardUser) => void;
   searchValue: string;
   setSearchValue: (value: string) => void;
+  updatingUserId: string | null;
 }) {
   return (
     <View style={styles.section}>
@@ -365,20 +469,22 @@ function UsersSection({
             </View>
 
             <View style={styles.userStatsRow}>
-              <View>
+              <View style={styles.userMetricBlock}>
                 <Text style={styles.userMetricLabel}>Metas:</Text>
                 <Text style={styles.userMetricValue}>
                   {user.goalsCompleted}/{user.goalsTotal}
                 </Text>
               </View>
-              <View>
+              <View style={styles.userMetricBlock}>
                 <Text style={styles.userMetricLabel}>Metas con ahorro:</Text>
                 <Text style={styles.userMetricValue}>
                   {user.savingsParticipationPercentage.toFixed(0)}%
                 </Text>
               </View>
               <View style={styles.rolePill}>
-                <Text style={styles.rolePillText}>{user.roleLabel}</Text>
+                <Text style={styles.rolePillText} numberOfLines={1}>
+                  {user.roleLabel}
+                </Text>
               </View>
               <View style={styles.statusPill}>
                 <Text style={styles.statusPillText}>
@@ -389,33 +495,53 @@ function UsersSection({
 
             <View style={styles.userActionRow}>
               <Pressable
-                disabled={user.status !== 1 || user.roleId === 2}
+                disabled={
+                  user.status !== 1 ||
+                  user.roleId === 2 ||
+                  updatingUserId === user.id
+                }
                 onPress={() => onPromoteUser(user)}
                 style={({ pressed }: PressableStateCallbackType) => [
                   appStyles.buttonSecondary,
                   styles.userActionButton,
                   pressed ? appStyles.buttonSecondaryPressed : null,
-                  user.status !== 1 || user.roleId === 2
+                  user.status !== 1 ||
+                  user.roleId === 2 ||
+                  updatingUserId === user.id
                     ? styles.actionDisabled
                     : null,
                 ]}
               >
-                <Text style={appStyles.buttonSecondaryText}>Hacer admin</Text>
+                {updatingUserId === user.id ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : (
+                  <Text style={appStyles.buttonSecondaryText}>Hacer admin</Text>
+                )}
               </Pressable>
 
               <Pressable
-                disabled={user.status !== 1 || user.id === currentUserId}
+                disabled={
+                  user.status !== 1 ||
+                  user.id === currentUserId ||
+                  updatingUserId === user.id
+                }
                 onPress={() => onDeactivateUser(user)}
                 style={({ pressed }: PressableStateCallbackType) => [
                   appStyles.buttonGhost,
                   styles.userActionButton,
                   pressed ? appStyles.buttonGhostPressed : null,
-                  user.status !== 1 || user.id === currentUserId
+                  user.status !== 1 ||
+                  user.id === currentUserId ||
+                  updatingUserId === user.id
                     ? styles.actionDisabled
                     : null,
                 ]}
               >
-                <Text style={appStyles.buttonGhostText}>Inactivar</Text>
+                {updatingUserId === user.id ? (
+                  <ActivityIndicator color={colors.textMuted} />
+                ) : (
+                  <Text style={appStyles.buttonGhostText}>Inactivar</Text>
+                )}
               </Pressable>
             </View>
           </View>
@@ -472,10 +598,10 @@ function AdminBottomNav({
   activeTab: AdminTab;
   onNavigate: (tab: AdminTab) => void;
 }) {
-  const items: Array<{ id: AdminTab; label: string; icon: string }> = [
-    { id: "home", label: "Inicio", icon: "⌂" },
-    { id: "users", label: "Usuarios", icon: "▦" },
-    { id: "profile", label: "Perfil", icon: "◉" },
+  const items: Array<{ id: AdminTab; label: string; icon: AdminNavIconVariant }> = [
+    { id: "home", label: "Inicio", icon: "home" },
+    { id: "users", label: "Usuarios", icon: "users" },
+    { id: "profile", label: "Perfil", icon: "profile" },
   ];
 
   return (
@@ -489,15 +615,52 @@ function AdminBottomNav({
             onPress={() => onNavigate(item.id)}
             style={styles.navItem}
           >
-            <Text style={[styles.navIcon, isActive ? styles.navIconActive : null]}>
-              {item.icon}
-            </Text>
+            <AdminNavIcon isActive={isActive} variant={item.icon} />
             <Text style={[styles.navText, isActive ? styles.navTextActive : null]}>
               {item.label}
             </Text>
           </Pressable>
         );
       })}
+    </View>
+  );
+}
+
+function AdminNavIcon({
+  isActive,
+  variant,
+}: {
+  isActive: boolean;
+  variant: AdminNavIconVariant;
+}) {
+  const color = isActive ? "#FFFFFF" : "rgba(255,255,255,0.72)";
+
+  if (variant === "home") {
+    return (
+      <View style={styles.adminNavIconFrame}>
+        <View style={[styles.adminNavHomeRoof, { borderColor: color }]} />
+        <View style={[styles.adminNavHomeBody, { borderColor: color }]}>
+          <View style={[styles.adminNavHomeDoor, { backgroundColor: color }]} />
+        </View>
+      </View>
+    );
+  }
+
+  if (variant === "users") {
+    return (
+      <View style={styles.adminNavIconFrame}>
+        <View style={[styles.adminNavUsersHeadMain, { borderColor: color }]} />
+        <View style={[styles.adminNavUsersBodyMain, { borderColor: color }]} />
+        <View style={[styles.adminNavUsersHeadSide, { borderColor: color }]} />
+        <View style={[styles.adminNavUsersBodySide, { borderColor: color }]} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.adminNavIconFrame}>
+      <View style={[styles.adminNavProfileHead, { borderColor: color }]} />
+      <View style={[styles.adminNavProfileBody, { borderColor: color }]} />
     </View>
   );
 }
@@ -560,6 +723,141 @@ const styles = StyleSheet.create({
   statIcon: {
     fontSize: 19,
     fontWeight: "800",
+  },
+  metricIconFrame: {
+    width: 28,
+    height: 28,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  metricTargetRing: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  metricTargetDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  metricBars: {
+    width: 22,
+    height: 20,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+  },
+  metricBarSmall: {
+    width: 5,
+    height: 8,
+    borderRadius: 3,
+  },
+  metricBarMedium: {
+    width: 5,
+    height: 13,
+    borderRadius: 3,
+  },
+  metricBarTall: {
+    width: 5,
+    height: 18,
+    borderRadius: 3,
+  },
+  metricPersonHead: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+  },
+  metricPersonBody: {
+    width: 20,
+    height: 10,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    borderWidth: 2,
+    borderBottomWidth: 0,
+    marginTop: 3,
+  },
+  metricDiamond: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderRadius: 4,
+    transform: [{ rotate: "45deg" }],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  metricDiamondDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  metricClock: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  metricClockHandTall: {
+    width: 2,
+    height: 8,
+    borderRadius: 2,
+    position: "absolute",
+    top: 5,
+  },
+  metricClockHandWide: {
+    width: 7,
+    height: 2,
+    borderRadius: 2,
+    position: "absolute",
+    left: 10,
+    top: 11,
+  },
+  metricCoin: {
+    width: 19,
+    height: 19,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -2,
+  },
+  metricCoinLine: {
+    width: 7,
+    height: 2,
+    borderRadius: 2,
+  },
+  metricDepositBase: {
+    width: 22,
+    height: 3,
+    borderRadius: 2,
+    marginTop: 2,
+  },
+  metricFlowTop: {
+    width: 20,
+    height: 8,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    borderTopRightRadius: 8,
+  },
+  metricFlowBottom: {
+    width: 20,
+    height: 8,
+    borderBottomWidth: 2,
+    borderLeftWidth: 2,
+    borderBottomLeftRadius: 8,
+    marginTop: 1,
+  },
+  metricFlowCenter: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    position: "absolute",
   },
   statLabel: {
     flex: 1,
@@ -680,9 +978,13 @@ const styles = StyleSheet.create({
   },
   userStatsRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 26,
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+    gap: 10,
     marginTop: 14,
+  },
+  userMetricBlock: {
+    minWidth: 96,
   },
   userMetricLabel: {
     color: colors.textMuted,
@@ -694,7 +996,6 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   statusPill: {
-    marginLeft: "auto",
     borderRadius: 999,
     backgroundColor: colors.input,
     paddingHorizontal: 10,
@@ -706,6 +1007,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   rolePill: {
+    maxWidth: "100%",
     borderRadius: 999,
     backgroundColor: colors.accentSoft,
     paddingHorizontal: 10,
@@ -715,6 +1017,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 12,
     fontWeight: "800",
+    flexShrink: 1,
   },
   userActionRow: {
     flexDirection: "row",
@@ -759,13 +1062,91 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  navIcon: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 25,
-    fontWeight: "800",
+  adminNavIconFrame: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  navIconActive: {
-    color: "#FFFFFF",
+  adminNavHomeRoof: {
+    width: 16,
+    height: 16,
+    borderLeftWidth: 2,
+    borderTopWidth: 2,
+    borderRadius: 3,
+    transform: [{ rotate: "45deg" }],
+    marginBottom: -7,
+  },
+  adminNavHomeBody: {
+    width: 18,
+    height: 15,
+    borderWidth: 2,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  adminNavHomeDoor: {
+    width: 5,
+    height: 8,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+  },
+  adminNavUsersHeadMain: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    borderWidth: 2,
+    position: "absolute",
+    top: 3,
+    left: 7,
+  },
+  adminNavUsersBodyMain: {
+    width: 17,
+    height: 10,
+    borderTopLeftRadius: 9,
+    borderTopRightRadius: 9,
+    borderWidth: 2,
+    borderBottomWidth: 0,
+    position: "absolute",
+    bottom: 4,
+    left: 3,
+  },
+  adminNavUsersHeadSide: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    borderWidth: 2,
+    position: "absolute",
+    top: 6,
+    right: 3,
+  },
+  adminNavUsersBodySide: {
+    width: 12,
+    height: 8,
+    borderTopLeftRadius: 7,
+    borderTopRightRadius: 7,
+    borderWidth: 2,
+    borderBottomWidth: 0,
+    position: "absolute",
+    bottom: 4,
+    right: 0,
+  },
+  adminNavProfileHead: {
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    borderWidth: 2,
+  },
+  adminNavProfileBody: {
+    width: 21,
+    height: 11,
+    borderTopLeftRadius: 11,
+    borderTopRightRadius: 11,
+    borderWidth: 2,
+    borderBottomWidth: 0,
+    marginTop: 3,
   },
   navText: {
     color: "rgba(255,255,255,0.72)",

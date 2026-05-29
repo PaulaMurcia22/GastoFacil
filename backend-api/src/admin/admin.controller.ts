@@ -23,14 +23,14 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get("dashboard")
-  async getDashboard(@Req() _request: SessionRequest) {
-    return this.adminService.getDashboard();
+  async getDashboard(@Req() request: SessionRequest) {
+    return this.adminService.getDashboard(request.user.sub);
   }
 
   @Post("users")
   @HttpCode(HttpStatus.CREATED)
-  async createUser(@Body() dto: CreateAdminUserDto) {
-    const users = await this.adminService.createUser(dto);
+  async createUser(@Body() dto: CreateAdminUserDto, @Req() request: SessionRequest) {
+    const users = await this.adminService.createUser(dto, request.user.sub);
 
     return {
       message: "Usuario creado correctamente.",
@@ -52,8 +52,14 @@ export class AdminController {
   }
 
   @Patch("users/:id/promote")
-  async promoteUserToAdmin(@Param("id") id: string) {
-    const users = await this.adminService.promoteUserToAdmin(id);
+  async promoteUserToAdmin(
+    @Param("id") id: string,
+    @Req() request: SessionRequest,
+  ) {
+    const users = await this.adminService.promoteUserToAdmin(
+      id,
+      request.user.sub,
+    );
 
     return {
       message: "Usuario convertido en administrador correctamente.",

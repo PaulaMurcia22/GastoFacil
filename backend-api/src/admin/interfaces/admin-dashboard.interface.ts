@@ -3,6 +3,9 @@ export interface AdminDashboardStats {
   activeUserPercentage: number;
   goalAdoptionPercentage: number;
   savingsParticipationPercentage: number;
+  historicalUsersTotal: number;
+  monthlyGoalContributionUserPercentage: number;
+  monthlyIncomeExpenseUserPercentage: number;
 }
 
 export interface AdminDashboardUser {

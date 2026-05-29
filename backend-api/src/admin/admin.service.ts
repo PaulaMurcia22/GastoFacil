@@ -23,10 +23,10 @@ export class AdminService {
     private readonly usersRepository: UsersRepository,
   ) {}
 
-  async getDashboard(): Promise<AdminDashboardResponse> {
+  async getDashboard(currentAdminId: string): Promise<AdminDashboardResponse> {
     const [stats, users] = await Promise.all([
       this.adminRepository.getDashboardStats(),
-      this.adminRepository.listUsers(),
+      this.adminRepository.listUsers(currentAdminId),
     ]);
 
     return {
@@ -37,12 +37,22 @@ export class AdminService {
         savingsParticipationPercentage: Number(
           stats.savingsParticipationPercentage,
         ),
+        historicalUsersTotal: Number(stats.historicalUsersTotal),
+        monthlyGoalContributionUserPercentage: Number(
+          stats.monthlyGoalContributionUserPercentage,
+        ),
+        monthlyIncomeExpenseUserPercentage: Number(
+          stats.monthlyIncomeExpenseUserPercentage,
+        ),
       },
       users: users.map((user) => this.mapUser(user)),
     };
   }
 
-  async createUser(dto: CreateAdminUserDto): Promise<AdminDashboardUser[]> {
+  async createUser(
+    dto: CreateAdminUserDto,
+    currentAdminId: string,
+  ): Promise<AdminDashboardUser[]> {
     const existingUser = await this.usersRepository.findByEmail(dto.email);
 
     if (existingUser) {
@@ -60,7 +70,7 @@ export class AdminService {
       roleId: dto.roleId,
     });
 
-    const users = await this.adminRepository.listUsers();
+    const users = await this.adminRepository.listUsers(currentAdminId);
 
     return users.map((user) => this.mapUser(user));
   }
@@ -80,19 +90,22 @@ export class AdminService {
       );
     }
 
-    const users = await this.adminRepository.listUsers();
+    const users = await this.adminRepository.listUsers(currentAdminId);
 
     return users.map((user) => this.mapUser(user));
   }
 
-  async promoteUserToAdmin(userId: string): Promise<AdminDashboardUser[]> {
+  async promoteUserToAdmin(
+    userId: string,
+    currentAdminId: string,
+  ): Promise<AdminDashboardUser[]> {
     const updatedUserId = await this.adminRepository.promoteUserToAdmin(userId);
 
     if (!updatedUserId) {
       throw new NotFoundException("No encontramos un usuario activo para promover.");
     }
 
-    const users = await this.adminRepository.listUsers();
+    const users = await this.adminRepository.listUsers(currentAdminId);
 
     return users.map((user) => this.mapUser(user));
   }
