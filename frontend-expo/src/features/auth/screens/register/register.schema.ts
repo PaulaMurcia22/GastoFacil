@@ -27,6 +27,7 @@ export const registerSchema = z
       .string()
       .trim()
       .min(2, "Ingresa tu nickname."),
+    roleId: z.enum(["1", "2"]).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ["confirmPassword"],

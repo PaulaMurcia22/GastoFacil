@@ -196,3 +196,31 @@ VALUES
   ('Emergencia', 'goal'),
   ('Otros', 'goal')
 ON CONFLICT (name, category_type) DO NOTHING;
+
+INSERT INTO users (
+  full_name,
+  nickname,
+  email,
+  age,
+  password_hash,
+  id_rol,
+  status,
+  audit
+)
+VALUES (
+  'Administrador Gasto Facil',
+  'admin',
+  'admin@gastofacil.com',
+  30,
+  '$2a$10$FNrNJIYoIEEUyoLFuPZt9.2Vhray1hniJJdRn9MDnNnUw83qG0mei',
+  2,
+  1,
+  jsonb_build_object(
+    'creacion',
+    jsonb_build_object(
+      'fecha', NOW(),
+      'accion', 'CREACION'
+    )
+  )
+)
+ON CONFLICT ((LOWER(email))) DO NOTHING;

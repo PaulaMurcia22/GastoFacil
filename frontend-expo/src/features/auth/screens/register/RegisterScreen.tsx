@@ -5,24 +5,30 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
+  type PressableStateCallbackType,
   Text,
   View,
 } from "react-native";
 
 import { FormField } from "../../../../components/FormField";
+import { SelectField } from "../../../app/components/SelectField";
 import { authStyles } from "../../shared/auth.styles";
-import { registerUser } from "./register.api";
+import { createAdminManagedUser, registerUser } from "./register.api";
 import {
   type RegisterFormValues,
   registerSchema,
 } from "./register.schema";
 
 interface RegisterScreenProps {
-  onGoToLogin: () => void;
+  isAdminMode?: boolean;
+  onCancel?: () => void;
+  onGoToLogin?: () => void;
   onRegisterSuccess: (email: string, message: string) => void;
 }
 
 export function RegisterScreen({
+  isAdminMode = false,
+  onCancel,
   onGoToLogin,
   onRegisterSuccess,
 }: RegisterScreenProps) {
@@ -43,19 +49,31 @@ export function RegisterScreen({
       confirmPassword: "",
       age: "",
       nickname: "",
+      roleId: "1",
     },
   });
 
   const onSubmit = handleSubmit(async (values) => {
     try {
       const normalizedEmail = values.email.trim().toLowerCase();
-      const response = await registerUser({
+      const payload = {
         fullName: values.fullName.trim(),
         email: normalizedEmail,
         password: values.password,
         age: Number(values.age),
         nickname: values.nickname.trim(),
-      });
+      };
+
+      const successMessage = isAdminMode
+        ? (
+            await createAdminManagedUser({
+              ...payload,
+              roleId: Number(values.roleId ?? "1"),
+            })
+          ).message
+        : `${
+            (await registerUser(payload)).user.nickname
+          }, tu cuenta fue creada correctamente. Ahora puedes iniciar sesion.`;
 
       reset({
         fullName: "",
@@ -64,11 +82,12 @@ export function RegisterScreen({
         confirmPassword: "",
         age: "",
         nickname: "",
+        roleId: "1",
       });
 
       onRegisterSuccess(
         normalizedEmail,
-        `${response.user.nickname}, tu cuenta fue creada correctamente. Ahora puedes iniciar sesion.`,
+        successMessage,
       );
     } catch (error) {
       const message =
@@ -147,10 +166,23 @@ export function RegisterScreen({
         placeholder="Ej: anita_ahorra"
       />
 
+      {isAdminMode ? (
+        <SelectField
+          control={control}
+          label="Rol"
+          name="roleId"
+          options={[
+            { label: "Usuario general", value: "1" },
+            { label: "Administrador", value: "2" },
+          ]}
+          placeholder="Selecciona el rol"
+        />
+      ) : null}
+
       <Pressable
         disabled={isSubmitting}
         onPress={onSubmit}
-        style={({ pressed }) => [
+        style={({ pressed }: PressableStateCallbackType) => [
           authStyles.submitButton,
           pressed ? authStyles.submitButtonPressed : null,
           isSubmitting ? authStyles.submitButtonDisabled : null,
@@ -163,12 +195,18 @@ export function RegisterScreen({
         )}
       </Pressable>
 
-      <Text style={authStyles.footerText}>
-        Ya tienes cuenta?{" "}
-        <Text onPress={onGoToLogin} style={authStyles.footerLink}>
-          Inicia sesion aqui
+      {isAdminMode ? (
+        <Text onPress={onCancel} style={authStyles.footerText}>
+          Cancelar y volver a usuarios
         </Text>
-      </Text>
+      ) : (
+        <Text style={authStyles.footerText}>
+          Ya tienes cuenta?{" "}
+          <Text onPress={onGoToLogin} style={authStyles.footerLink}>
+            Inicia sesion aqui
+          </Text>
+        </Text>
+      )}
     </View>
   );
 }
