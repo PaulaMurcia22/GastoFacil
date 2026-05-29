@@ -10,6 +10,7 @@ interface CreateUserParams {
   email: string;
   age: number;
   passwordHash: string;
+  roleId?: number;
 }
 
 @Injectable()
@@ -54,7 +55,7 @@ export class UsersRepository {
         params.email,
         params.age,
         params.passwordHash,
-        1,
+        params.roleId ?? 1,
       ],
     );
 

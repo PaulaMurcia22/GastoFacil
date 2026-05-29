@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, View } from "react-native";
+import { View } from "react-native";
 
 import { type HomeData } from "../auth/screens/home/home.types";
 import { AppHeader } from "./components/AppHeader";
@@ -19,6 +19,7 @@ import { GoalListScreen } from "../goals/screens/GoalListScreen";
 import { CreateGoalScreen } from "../goals/screens/CreateGoalScreen";
 import { GoalDetailScreen } from "../goals/screens/GoalDetailScreen";
 import { GoalItem } from "../goals/goal.types";
+import { HomeScreen } from "../auth/screens/home/HomeScreen";
 
 interface UserAppProps {
   session: HomeData;
@@ -28,6 +29,10 @@ interface UserAppProps {
 function resolveActiveNav(screen: UserAppScreen): BottomNavScreen {
   if (screen === "home") {
     return "home";
+  }
+
+  if (screen === "profile") {
+    return "profile";
   }
 
   if (screen === "goal-list" || screen === "goal-create" || screen === "goal-detail") {
@@ -61,6 +66,11 @@ export function UserApp({ session, onCloseSession }: UserAppProps) {
       return;
     }
 
+    if (screen === "profile") {
+      setActiveScreen("profile");
+      return;
+    }
+
     if (screen === "income-list") {
       setActiveScreen("income-list");
       return;
@@ -76,10 +86,6 @@ export function UserApp({ session, onCloseSession }: UserAppProps) {
       return;
     }
 
-    Alert.alert(
-      "Seccion en preparacion",
-      "El menu inferior ya esta visible, pero por ahora dejamos activos los flujos de metas, ingresos y gastos.",
-    );
   };
 
   return (
@@ -90,6 +96,13 @@ export function UserApp({ session, onCloseSession }: UserAppProps) {
         {activeScreen === "home" ? (
           <HomeDashboardScreen
             refreshKey={refreshKey}
+          />
+        ) : null}
+
+        {activeScreen === "profile" ? (
+          <HomeScreen
+            session={session}
+            onCloseSession={onCloseSession}
           />
         ) : null}
 

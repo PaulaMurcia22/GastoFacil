@@ -1,5 +1,6 @@
 export type UserAppScreen =
   | "home"
+  | "profile"
   | "goal-list"
   | "goal-create"
   | "goal-detail"
@@ -12,7 +13,7 @@ export type UserAppScreen =
 
 export type BottomNavScreen =
   | "home"
+  | "profile"
   | "goal-list"
   | "income-list"
-  | "expense-list"
-  | "money-view";
+  | "expense-list";

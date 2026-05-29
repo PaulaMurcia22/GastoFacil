@@ -4,6 +4,7 @@ export interface RegisterPayload {
   password: string;
   age: number;
   nickname: string;
+  roleId?: number;
 }
 
 export interface RegisteredUser {
@@ -13,6 +14,8 @@ export interface RegisteredUser {
   email: string;
   age: number;
   status: number;
+  id_rol?: number;
+  idRol?: number;
   audit: Record<string, unknown>;
 }
 
@@ -45,4 +48,27 @@ export async function registerUser(
   }
 
   return data as RegisterResponse;
+}
+
+export async function createAdminManagedUser(
+  payload: RegisterPayload & { roleId: number },
+): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/admin/users`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = (await response.json().catch(() => null)) as
+    | { message?: string }
+    | null;
+
+  if (!response.ok) {
+    throw new Error(data?.message ?? "No fue posible crear el usuario.");
+  }
+
+  return { message: data?.message ?? "Usuario creado correctamente." };
 }
