@@ -6,4 +6,5 @@ coverage/
 *.log
 
 frontend-expo/.expo/
-.env
+frontend-expo/.env
+backend-api/.env
